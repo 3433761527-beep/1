@@ -19,6 +19,7 @@ class MusicPlaybackService : MediaSessionService() {
     private val timerHandler = Handler(Looper.getMainLooper())
     private var sleepTimerTask: Runnable? = null
     private var sleepAfterCurrent = false
+    private var repeatModeBeforeSleep: Int? = null
 
     override fun onCreate() {
         super.onCreate()
@@ -47,17 +48,11 @@ class MusicPlaybackService : MediaSessionService() {
             }
 
             override fun onMediaItemTransition(mediaItem: androidx.media3.common.MediaItem?, reason: Int) {
-                if (sleepAfterCurrent) {
-                    sleepAfterCurrent = false
-                    mediaSession?.player?.pause()
-                }
+                if (sleepAfterCurrent) pauseAfterCurrent()
             }
 
             override fun onPlaybackStateChanged(playbackState: Int) {
-                if (sleepAfterCurrent && playbackState == Player.STATE_ENDED) {
-                    sleepAfterCurrent = false
-                    mediaSession?.player?.pause()
-                }
+                if (sleepAfterCurrent && playbackState == Player.STATE_ENDED) pauseAfterCurrent()
             }
         })
         mediaSession = MediaSession.Builder(this, player).build()
@@ -74,21 +69,38 @@ class MusicPlaybackService : MediaSessionService() {
             ACTION_SET_SLEEP_TIMER -> {
                 val minutes = intent.getIntExtra(EXTRA_SLEEP_MINUTES, 0)
                 sleepAfterCurrent = false
+                restoreRepeatMode()
                 scheduleSleepTimer(minutes)
                 return START_NOT_STICKY
             }
             ACTION_SLEEP_AFTER_CURRENT -> {
                 scheduleSleepTimer(0)
+                repeatModeBeforeSleep = mediaSession?.player?.repeatMode
+                mediaSession?.player?.repeatMode = Player.REPEAT_MODE_OFF
                 sleepAfterCurrent = true
                 return START_NOT_STICKY
             }
             ACTION_CANCEL_SLEEP_TIMER -> {
                 scheduleSleepTimer(0)
                 sleepAfterCurrent = false
+                restoreRepeatMode()
                 return START_NOT_STICKY
             }
         }
         return super.onStartCommand(intent, flags, startId)
+    }
+
+    private fun pauseAfterCurrent() {
+        sleepAfterCurrent = false
+        mediaSession?.player?.pause()
+        restoreRepeatMode()
+    }
+
+    private fun restoreRepeatMode() {
+        repeatModeBeforeSleep?.let { previous ->
+            mediaSession?.player?.repeatMode = previous
+        }
+        repeatModeBeforeSleep = null
     }
 
     private fun scheduleSleepTimer(minutes: Int) {
