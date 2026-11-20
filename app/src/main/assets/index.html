@@ -285,9 +285,9 @@ function toggleFavoriteCurrent(){
 function showSheet(title,body){$('sheetTitle').textContent=title;$('sheetBody').innerHTML=body;$('sheetOverlay').classList.add('open')}
 function closeSheet(){$('sheetOverlay').classList.remove('open')}
 $('sheetClose').onclick=closeSheet;$('sheetOverlay').onclick=function(e){if(e.target===$('sheetOverlay'))closeSheet()};
-function showCreatePlaylist(){
+function showCreatePlaylist(addCurrent){
  showSheet('创建新歌单','<input class="sheet-input" id="newPlaylistName" maxlength="40" placeholder="输入歌单名称"><button class="sheet-primary" id="confirmCreatePlaylist">创建歌单</button>');
- $('confirmCreatePlaylist').onclick=function(){let name=$('newPlaylistName').value.trim();if(!name){say('请填写歌单名称');return}playlists.push({id:'p'+Date.now(),name:name,tracks:[]});savePlaylists();renderPlaylists();closeSheet();say('歌单已创建')};
+ $('confirmCreatePlaylist').onclick=function(){let name=$('newPlaylistName').value.trim();if(!name){say('请填写歌单名称');return}let p={id:'p'+Date.now(),name:name,tracks:[]};if(addCurrent&&currentTrack)p.tracks.push(recordForPlaylist(currentTrack));playlists.push(p);savePlaylists();renderPlaylists();closeSheet();say(addCurrent&&currentTrack?'歌单已创建并添加当前歌曲':'歌单已创建')};
 }
 function showPlaylistDetail(id){
  const p=playlists.find(function(x){return x.id===id});if(!p)return;
@@ -309,7 +309,7 @@ function showAddToPlaylist(){
  if(!playlists.length)body='<div class="sheet-empty">还没有歌单，先创建一个。</div>'+body;
  showSheet('添加到歌单',body);
  $('sheetBody').querySelectorAll('[data-add-playlist]').forEach(function(b){b.onclick=function(){let p=playlists.find(function(x){return x.id===b.dataset.addPlaylist});if(!p)return;let rec=recordForPlaylist(currentTrack),key=currentKey(currentTrack);if(!p.tracks.some(function(t){return (t.source==='audius'?'a:'+t.trackId:'l:'+t.id)===key}))p.tracks.push(rec);savePlaylists();renderPlaylists();closeSheet();say('已添加到 '+p.name)}});
- $('newPlaylistFromTrack').onclick=function(){showCreatePlaylist()};
+ $('newPlaylistFromTrack').onclick=function(){showCreatePlaylist(true)};
 }
 function showQueue(){
  let body=queue.map(function(t,i){let cls=i===current?'queue-current':'';return '<button class="sheet-action '+cls+'" data-queue-play="'+i+'"><span>'+safe(t.title)+'<br><small>'+safe(t.artist)+'</small></span><small>'+(i===current?'正在播放':'播放')+'</small></button>'}).join('');
