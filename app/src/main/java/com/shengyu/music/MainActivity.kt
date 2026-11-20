@@ -220,6 +220,19 @@ class MainActivity : Activity() {
         }
 
         @JavascriptInterface
+        fun setSleepTimer(minutes: Int) {
+            val safeMinutes = minutes.coerceIn(0, 240)
+            val intent = Intent(this@MainActivity, MusicPlaybackService::class.java).apply {
+                action = if (safeMinutes == 0) MusicPlaybackService.ACTION_CANCEL_SLEEP_TIMER
+                else MusicPlaybackService.ACTION_SET_SLEEP_TIMER
+                putExtra(MusicPlaybackService.EXTRA_SLEEP_MINUTES, safeMinutes)
+            }
+            runOnUiThread {
+                try { startService(intent) } catch (_: Exception) { }
+            }
+        }
+
+        @JavascriptInterface
         fun download(url: String, fileName: String): Boolean {
             val uri = Uri.parse(url)
             if (uri.scheme != "https" || uri.host !in setOf("api.audius.co", "discoveryprovider.audius.co")) {
