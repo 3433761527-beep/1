@@ -231,6 +231,15 @@ class MainActivity : Activity() {
             val safeSpeed = speed.coerceIn(0.5f, 2.0f)
             runOnUiThread { mediaController?.setPlaybackSpeed(safeSpeed) }
         }
+
+        @JavascriptInterface fun setRepeatMode(mode: Int) {
+            runOnUiThread {
+                mediaController?.repeatMode = if (mode == 1) Player.REPEAT_MODE_ONE else Player.REPEAT_MODE_OFF
+            }
+        }
+        @JavascriptInterface fun setShuffleMode(enabled: Boolean) {
+            runOnUiThread { mediaController?.shuffleModeEnabled = enabled }
+        }
         @JavascriptInterface fun positionMs(): Long = positionSnapshot
         @JavascriptInterface fun durationMs(): Long = durationSnapshot
         @JavascriptInterface fun isPlaying(): Boolean = playingSnapshot
