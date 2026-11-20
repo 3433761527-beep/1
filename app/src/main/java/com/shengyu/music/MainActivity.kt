@@ -26,6 +26,7 @@ import androidx.media3.common.Player
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
 import com.google.common.util.concurrent.ListenableFuture
+import org.json.JSONArray
 import java.util.concurrent.Executor
 
 class MainActivity : Activity() {
@@ -36,6 +37,9 @@ class MainActivity : Activity() {
     private var controllerFuture: ListenableFuture<MediaController>? = null
     @Volatile private var mediaController: MediaController? = null
     @Volatile private var pendingPlayback: PendingPlayback? = null
+    @Volatile private var pendingQueue: PendingQueue? = null
+    @Volatile private var currentIndexSnapshot: Int = -1
+    private var lastPickedUris: List<Uri> = emptyList()
     @Volatile private var positionSnapshot: Long = 0L
     @Volatile private var durationSnapshot: Long = 0L
     @Volatile private var playingSnapshot: Boolean = false
@@ -49,6 +53,11 @@ class MainActivity : Activity() {
         val artwork: String
     )
 
+    private data class PendingQueue(
+        val items: List<MediaItem>,
+        val startIndex: Int
+    )
+
     private val snapshotTask = object : Runnable {
         override fun run() {
             val player = mediaController
@@ -57,6 +66,7 @@ class MainActivity : Activity() {
                 durationSnapshot = if (player.duration > 0L && player.duration < Long.MAX_VALUE / 2) player.duration else 0L
                 playingSnapshot = player.isPlaying
                 stateSnapshot = player.playbackState
+                currentIndexSnapshot = player.currentMediaItemIndex
             }
             if (::webView.isInitialized && webView.visibility == android.view.View.VISIBLE) {
                 webView.evaluateJavascript(
@@ -148,6 +158,10 @@ class MainActivity : Activity() {
             try {
                 val controller = future.get()
                 mediaController = controller
+                pendingQueue?.let { request ->
+                    pendingQueue = null
+                    startNativeQueue(request.items, request.startIndex)
+                }
                 pendingPlayback?.let { request ->
                     pendingPlayback = null
                     startNativePlayback(request)
@@ -156,6 +170,18 @@ class MainActivity : Activity() {
                 // The WebView player remains available if the native session cannot connect.
             }
         }, Executor { command -> runOnUiThread { command.run() } })
+    }
+
+    private fun startNativeQueue(items: List<MediaItem>, startIndex: Int) {
+        val controller = mediaController ?: run {
+            pendingQueue = PendingQueue(items, startIndex)
+            connectMediaController()
+            return
+        }
+        if (items.isEmpty()) return
+        controller.setMediaItems(items, startIndex.coerceIn(0, items.lastIndex), 0L)
+        controller.prepare()
+        controller.play()
     }
 
     private fun startNativePlayback(request: PendingPlayback) {
@@ -207,6 +233,69 @@ class MainActivity : Activity() {
         @JavascriptInterface fun durationMs(): Long = durationSnapshot
         @JavascriptInterface fun isPlaying(): Boolean = playingSnapshot
         @JavascriptInterface fun playbackState(): Int = stateSnapshot
+        @JavascriptInterface fun currentIndex(): Int = currentIndexSnapshot
+
+        @JavascriptInterface
+        fun registerLocalTrack(trackId: String, selectedIndex: Int): Boolean {
+            val uri = lastPickedUris.getOrNull(selectedIndex) ?: return false
+            return try {
+                getSharedPreferences("shengyu_native_local", MODE_PRIVATE)
+                    .edit()
+                    .putString("localUri_$trackId", uri.toString())
+                    .apply()
+                true
+            } catch (_: Exception) {
+                false
+            }
+        }
+
+        @JavascriptInterface
+        fun playLocal(trackId: String, title: String, artist: String): Boolean {
+            val uriText = getSharedPreferences("shengyu_native_local", MODE_PRIVATE)
+                .getString("localUri_$trackId", null) ?: return false
+            val uri = Uri.parse(uriText)
+            if (uri.scheme != "content") return false
+            val request = PendingPlayback(uri.toString(), title.take(180), artist.take(180), "")
+            runOnUiThread { startNativePlayback(request) }
+            return true
+        }
+
+        @JavascriptInterface
+        fun playQueue(queueJson: String, startIndex: Int): Boolean {
+            return try {
+                val array = JSONArray(queueJson)
+                if (array.length() == 0 || array.length() > 500) return false
+                val items = ArrayList<MediaItem>(array.length())
+                for (i in 0 until array.length()) {
+                    val item = array.getJSONObject(i)
+                    val source = item.optString("source")
+                    val uri = if (source == "audius") {
+                        val parsed = Uri.parse(item.optString("url"))
+                        if (parsed.scheme != "https" || parsed.host !in setOf("api.audius.co", "discoveryprovider.audius.co")) return false
+                        parsed
+                    } else if (source == "local") {
+                        val id = item.optString("id")
+                        val stored = getSharedPreferences("shengyu_native_local", MODE_PRIVATE)
+                            .getString("localUri_$id", null) ?: return false
+                        Uri.parse(stored).also { if (it.scheme != "content") return false }
+                    } else return false
+                    val metadata = MediaMetadata.Builder()
+                        .setTitle(item.optString("title", "未知歌曲"))
+                        .setArtist(item.optString("artist", "未知歌手"))
+                        .apply {
+                            val art = item.optString("artwork")
+                            if (art.startsWith("https://")) setArtworkUri(Uri.parse(art))
+                            setMediaType(MediaMetadata.MEDIA_TYPE_MUSIC)
+                        }
+                        .build()
+                    items.add(MediaItem.Builder().setUri(uri).setMediaMetadata(metadata).build())
+                }
+                runOnUiThread { startNativeQueue(items, startIndex) }
+                true
+            } catch (_: Exception) {
+                false
+            }
+        }
 
         @JavascriptInterface
         fun setEqualizer(preset: Int) {
@@ -286,6 +375,16 @@ class MainActivity : Activity() {
                 data.data?.let { arrayOf(it) }
             }
         } else null
+        lastPickedUris = selected?.toList() ?: emptyList()
+        if (selected != null) {
+            selected.forEach { uri ->
+                try {
+                    contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                } catch (_: Exception) {
+                    // Some document providers do not offer persistable grants.
+                }
+            }
+        }
         callback.onReceiveValue(selected)
     }
 
