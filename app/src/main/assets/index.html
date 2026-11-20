@@ -382,7 +382,7 @@ function syncNative(){
  let state=$native.playbackState(),pos=Number($native.positionMs())/1000,dur=Number($native.durationMs())/1000;
  let nativeIndex=Number($native.currentIndex());
  if(nativeIndex>=0&&nativeIndex<queue.length&&nativeIndex!==current){
-  current=nativeIndex;currentTrack=queue[current];endedHandled=false;update();recordHistory(currentTrack);loadLyrics(currentTrack);
+  current=nativeIndex;currentTrack=queue[current];endedHandled=false;if(sleepAtEnd){sleepAtEnd=false;say('睡眠定时结束')}update();recordHistory(currentTrack);loadLyrics(currentTrack);
  }
  if(state===1&&Date.now()-nativeStartAt>10000){nativePlaybackActive=false;audio.src=currentTrack.source==='audius'?streamUrl(currentTrack,0):currentTrack.url;audio.play().catch(function(){say('音频加载失败，请检查网络或文件')});return}
  if(dur>0){$('seek').value=pos/dur*100;$('elapsed').textContent=time(pos);$('total').textContent=time(dur)}
