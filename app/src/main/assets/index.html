@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#101014">
+<title>声屿 MUSIC</title>
+<style>
+:root{--bg:#101014;--panel:#1c1c23;--muted:#a19faa;--red:#f04455;--line:#ffffff12}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#f7f5f8;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}
+button,input{font:inherit}button{border:0;cursor:pointer;color:inherit}
+.app{max-width:520px;min-height:100vh;margin:auto;padding-bottom:104px;background:linear-gradient(180deg,#26151d 0,#101014 340px)}
+header{height:64px;padding:0 20px;display:flex;align-items:center;justify-content:space-between;background:#101014d9;position:sticky;top:0;z-index:5;backdrop-filter:blur(15px)}
+.brand{font-weight:850;font-size:18px;letter-spacing:.5px;display:flex;align-items:center;gap:9px}.logo{width:32px;height:32px;border-radius:11px;background:linear-gradient(145deg,#ff6878,#bf1839);display:grid;place-items:center;font-size:19px}
+header button{background:#ffffff12;width:38px;height:38px;border-radius:50%;font-size:18px}
+.page{display:none;padding:15px 20px 24px}.page.active{display:block}
+.eyebrow{color:#aaa4af;font-size:11px;letter-spacing:2px;margin:8px 0}
+h1{font-size:27px;margin:4px 0 18px;letter-spacing:-.5px}.hero{height:168px;border-radius:22px;padding:19px;position:relative;overflow:hidden;background:linear-gradient(120deg,#4a1929,#a92e4c 60%,#ed7776);display:flex;flex-direction:column;justify-content:space-between}
+.hero:before,.hero:after{content:"";position:absolute;border:1px solid #ffffff30;border-radius:50%;width:210px;height:210px;right:-20px;top:-80px}.hero:after{width:150px;height:150px;right:10px;top:-50px}
+.hero small,.hero strong,.hero span{position:relative;z-index:1}.hero small{font-size:10px;letter-spacing:2px;color:#ffe3e7}.hero strong{font-size:25px;line-height:1.3}.hero span{font-size:11px;color:#ffe4e7}
+.orb{position:absolute;width:110px;height:110px;right:24px;bottom:-25px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ffd2ad,#ed5873 55%,#702039);box-shadow:0 0 0 14px #ffffff0c,0 0 0 29px #ffffff08}
+.section{display:flex;align-items:center;justify-content:space-between;margin:25px 0 13px}.section h2{font-size:18px;margin:0}.section small{color:var(--muted)}
+.shortcuts{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}.shortcut{border:1px solid var(--line);border-radius:15px;background:#ffffff0a;padding:12px 3px;text-align:center}.shortcut b{display:grid;place-items:center;width:38px;height:38px;border-radius:13px;background:#f0445522;color:#ff7584;margin:0 auto 7px;font-size:19px}.shortcut span{font-size:10px;color:#ddd}
+.cards{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}.card{min-width:0}.cover{aspect-ratio:1;border-radius:16px;display:grid;place-items:center;position:relative;overflow:hidden;margin-bottom:8px}.cover:before{content:"";position:absolute;width:68%;height:68%;border:1px solid #ffffff66;border-radius:50%;box-shadow:0 0 0 14px #ffffff0d,0 0 0 28px #ffffff08}.cover b{z-index:1;text-align:center;letter-spacing:2px;font-size:16px}.c1{background:linear-gradient(135deg,#17414b,#6ca8a2,#dfb78c)}.c2{background:linear-gradient(135deg,#33274e,#9565a5,#e5a2a8)}.c3{background:linear-gradient(135deg,#24334d,#5d8f9d,#bdc7b0)}.c4{background:linear-gradient(135deg,#602d38,#d16c62,#f1bf91)}
+.card strong{display:block;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.card small{display:block;color:var(--muted);font-size:10px;margin-top:4px}
+.searchbox{height:46px;border-radius:14px;background:#ffffff12;display:flex;align-items:center;padding:0 14px;margin:10px 0 22px;gap:10px}.searchbox span{color:#aaa}.searchbox input{border:0;outline:0;background:none;color:#fff;width:100%;font-size:14px}.searchbox input::placeholder{color:#85828e}
+.row{display:flex;align-items:center;gap:11px;padding:10px 0;border-bottom:1px solid var(--line)}.art{width:47px;height:47px;border-radius:11px;display:grid;place-items:center;flex:none;font-size:18px;background:linear-gradient(135deg,#1d4c56,#8cb2a1)}.info{flex:1;min-width:0}.info strong{font-size:13px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.info small{font-size:10px;color:var(--muted);display:block;margin-top:5px}.actions{display:flex;gap:5px}.actions button{background:none;color:#aaa;padding:7px;font-size:17px}
+.empty{border:1px dashed #ffffff25;border-radius:18px;padding:28px 18px;text-align:center;color:var(--muted);margin-top:12px}.empty .symbol{font-size:30px;margin-bottom:8px}.empty strong{display:block;color:#eee;font-size:15px;margin-bottom:7px}.empty p{font-size:11px;line-height:1.7;margin:0 0 15px}
+.primary{background:var(--red);color:white;border-radius:22px;padding:11px 18px;font-weight:700;font-size:12px}.secondary{background:#ffffff12;color:white;border:1px solid var(--line);border-radius:20px;padding:9px 14px;font-size:12px}
+.bottom{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(520px,100%);z-index:8;background:#111116ed;backdrop-filter:blur(18px);border-top:1px solid var(--line);padding:9px 12px calc(9px + env(safe-area-inset-bottom))}
+.mini{display:none;align-items:center;gap:10px;background:#25252d;border-radius:13px;padding:7px 10px;margin-bottom:8px}.mini.show{display:flex}.mini .art{width:37px;height:37px}.mini .info strong{font-size:11px}.mini .info small{font-size:9px}.mini button{background:none;font-size:17px;width:30px}
+nav{display:grid;grid-template-columns:repeat(3,1fr)}nav button{background:none;color:#8c8a95;display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px;font-size:10px}nav button.active{color:#ff6877}nav b{font-size:19px;font-weight:400}
+.player{display:none;position:fixed;inset:0;z-index:20;background:linear-gradient(155deg,#472638,#1a1920 58%,#101014);padding:env(safe-area-inset-top,10px) 22px calc(20px + env(safe-area-inset-bottom));flex-direction:column}.player.open{display:flex}.phead{display:flex;align-items:center;justify-content:space-between;padding:10px 0}.phead button{width:38px;height:38px;border-radius:50%;background:#ffffff12}.phead div{text-align:center}.phead strong{display:block;font-size:13px}.phead small{font-size:10px;color:#aaa}
+.bigartwrap{flex:1;display:grid;place-items:center;min-height:210px}.bigart{width:min(72vw,310px);aspect-ratio:1;border-radius:23px;display:grid;place-items:center;position:relative;box-shadow:0 22px 60px #0008;overflow:hidden}.bigart:before{content:"";position:absolute;width:72%;height:72%;border:1px solid #ffffff66;border-radius:50%;box-shadow:0 0 0 18px #ffffff0d,0 0 0 36px #ffffff08}.bigart span{font-weight:900;letter-spacing:3px;z-index:1;text-align:center;padding:10px}
+.meta h2{font-size:21px;margin:8px 0 6px}.meta p{font-size:12px;color:#aaa;margin:0 0 20px}
+input[type=range]{width:100%;accent-color:var(--red);height:4px}.times{display:flex;justify-content:space-between;color:#aaa;font-size:10px;margin-top:7px}.controls{display:flex;align-items:center;justify-content:space-between;margin:25px 0 20px}.controls button{background:none;font-size:21px;color:#eee}.controls .play{width:60px;height:60px;border-radius:50%;background:var(--red);font-size:24px;color:white}.pfoot{display:flex;justify-content:space-between}.pfoot button{background:none;color:#aaa;font-size:12px}
+.toast{position:fixed;z-index:50;bottom:110px;left:50%;transform:translateX(-50%);background:#35353e;padding:9px 14px;border-radius:20px;font-size:12px;opacity:0;pointer-events:none;transition:.2s;white-space:nowrap}.toast.show{opacity:1}
+@media(min-width:600px){body{padding:18px 0}.app{border:1px solid #2a2930;border-radius:26px;overflow:hidden;min-height:calc(100vh - 36px)}.bottom{bottom:18px;border-radius:0 0 26px 26px}.player{width:min(520px,100%);left:50%;transform:translateX(-50%);border-radius:26px}}
+</style>
+</head>
+<body>
+<div class="app">
+<header><div class="brand"><span class="logo">♫</span>声屿 <span style="font-weight:400;color:#aaa">MUSIC</span></div><button id="importTop" aria-label="导入音乐">＋</button></header>
+<main>
+<section class="page active" id="home">
+<div class="eyebrow">YOUR SOUND · YOUR ISLAND</div><h1>发现好音乐</h1>
+<div class="hero"><small>声屿 MUSIC · V1.0</small><strong>给今天，<br>一点好听的。</strong><span>从一首歌开始，找到自己的节奏</span><div class="orb"></div></div>
+<div class="section"><h2>快捷入口</h2></div>
+<div class="shortcuts">
+<button class="shortcut" id="quickImport"><b>＋</b><span>导入歌曲</span></button>
+<button class="shortcut" data-go="library"><b>▤</b><span>我的音乐</span></button>
+<button class="shortcut" id="quickFav"><b>♡</b><span>我喜欢的</span></button>
+<button class="shortcut" data-go="search"><b>⌕</b><span>搜索歌曲</span></button>
+</div>
+<div class="section"><h2>为你准备的歌单</h2></div>
+<div class="cards">
+<div class="card"><div class="cover c1"><b>BLUE<br>HOUR</b></div><strong>蓝色时刻</strong><small>适合慢下来的夜晚</small></div>
+<div class="card"><div class="cover c2"><b>DREAM<br>WAVE</b></div><strong>梦境回声</strong><small>轻柔旋律与一点想象</small></div>
+<div class="card"><div class="cover c3"><b>SLOW<br>DOWN</b></div><strong>慢一点也没关系</strong><small>给忙碌生活留白</small></div>
+<div class="card"><div class="cover c4"><b>SUNSET<br>CLUB</b></div><strong>日落之后</strong><small>温暖、松弛、自在</small></div>
+</div>
+<div class="section"><h2>最近添加</h2><small id="homeCount">0 首</small></div><div id="homeSongs"></div>
+</section>
+<section class="page" id="search">
+<div class="eyebrow">SEARCH</div><h1>搜索音乐</h1>
+<label class="searchbox"><span>⌕</span><input id="query" placeholder="搜索已导入的歌曲或歌手"></label>
+<div class="section"><h2 id="searchTitle">全部歌曲</h2><small id="searchCount">0 首</small></div><div id="searchSongs"></div>
+<div class="empty" id="searchEmpty"><div class="symbol">⌕</div><strong>还没有可搜索的歌曲</strong><p>导入手机里的音频文件后，就能在这里搜索和播放。</p><button class="primary" id="searchImport">导入音乐</button></div>
+</section>
+<section class="page" id="library">
+<div class="eyebrow">YOUR COLLECTION</div><div class="section"><h1 style="margin:0">我的音乐</h1><button class="primary" id="libraryImport">＋ 导入</button></div>
+<small id="libraryStat" style="color:var(--muted)">0 首歌曲 · 0 首收藏</small>
+<div class="section"><h2>全部歌曲</h2><small id="libraryCount">0 首</small></div><div id="librarySongs"></div>
+<div class="empty" id="libraryEmpty"><div class="symbol">♫</div><strong>你的音乐空间还是空的</strong><p>点击「导入」，选择手机里的 MP3、M4A、WAV 等音频文件。</p><button class="primary" id="emptyImport">选择音乐文件</button></div>
+<div class="section"><h2>我喜欢的</h2></div><div id="favoriteSongs"></div>
+</section>
+</main>
+<footer class="bottom">
+<div class="mini" id="mini"><div class="art">♫</div><div class="info"><strong id="miniTitle">尚未播放</strong><small id="miniArtist">导入音乐开始播放</small></div><button id="miniPlay">▶</button><button id="miniOpen">⌃</button></div>
+<nav><button class="active" data-go="home"><b>⌂</b>发现</button><button data-go="search"><b>⌕</b>搜索</button><button data-go="library"><b>▤</b>我的</button></nav>
+</footer>
+</div>
+<div class="player" id="player">
+<div class="phead"><button id="closePlayer">⌄</button><div><strong>正在播放</strong><small>声屿 MUSIC</small></div><button id="playerMore">···</button></div>
+<div class="bigartwrap"><div class="bigart c1" id="bigArt"><span id="bigArtText">BLUE HOUR</span></div></div>
+<div class="meta"><h2 id="trackTitle">还没有歌曲</h2><p id="trackArtist">导入音频文件后开始播放</p></div>
+<input type="range" id="seek" min="0" max="100" value="0"><div class="times"><span id="elapsed">00:00</span><span id="total">00:00</span></div>
+<div class="controls"><button id="shuffle">⤨</button><button id="prev">◀|</button><button class="play" id="play">▶</button><button id="next">|▶</button><button id="repeat">↻</button></div>
+<div class="pfoot"><button id="like">♡ 收藏</button><button id="queue">播放列表 · <span id="queueCount">0</span></button></div>
+</div>
+<div class="toast" id="toast"></div>
+<input id="files" type="file" accept="audio/*,.mp3,.m4a,.wav,.flac,.aac,.ogg" multiple hidden>
+<audio id="audio"></audio>
+<script>
+(function(){
+const $=function(id){return document.getElementById(id)};
+const audio=$('audio');let songs=[],current=-1,shuffle=false,repeat=false,db=null;
+const palettes=['linear-gradient(135deg,#17414b,#6ca8a2)','linear-gradient(135deg,#33274e,#9565a5)','linear-gradient(135deg,#24334d,#5d8f9d)','linear-gradient(135deg,#602d38,#d16c62)'];
+function say(s){let t=$('toast');t.textContent=s;t.classList.add('show');clearTimeout(window._toast);window._toast=setTimeout(function(){t.classList.remove('show')},1900)}
+function safe(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function time(n){if(!isFinite(n))return'00:00';return String(Math.floor(n/60)).padStart(2,'0')+':'+String(Math.floor(n%60)).padStart(2,'0')}
+function dbOpen(){return new Promise(function(resolve,reject){if(!window.indexedDB){reject('no indexeddb');return}if(db){resolve(db);return}let r=indexedDB.open('shengyu-music',1);r.onupgradeneeded=function(){r.result.createObjectStore('songs',{keyPath:'id'})};r.onsuccess=function(){db=r.result;resolve(db)};r.onerror=function(){reject(r.error)}})}
+function save(t){dbOpen().then(function(d){let tx=d.transaction('songs','readwrite');tx.objectStore('songs').put({id:t.id,title:t.title,artist:t.artist,blob:t.file,favorite:t.favorite,color:t.color,added:t.added})}).catch(function(e){console.log(e)})}
+function restore(){dbOpen().then(function(d){let r=d.transaction('songs','readonly').objectStore('songs').getAll();r.onsuccess=function(){songs=(r.result||[]).map(function(x){return Object.assign(x,{file:x.blob,url:URL.createObjectURL(x.blob)})});renderAll()}}).catch(function(){renderAll()})}
+function go(p){document.querySelectorAll('.page').forEach(function(x){x.classList.toggle('active',x.id===p)});document.querySelectorAll('nav button').forEach(function(x){x.classList.toggle('active',x.dataset.go===p)});if(p==='search')renderSearch();if(p==='library')renderLibrary();window.scrollTo(0,0)}
+document.querySelectorAll('[data-go]').forEach(function(b){b.onclick=function(){go(b.dataset.go)}});
+function importMusic(){$('files').click()}
+['importTop','quickImport','searchImport','libraryImport','emptyImport'].forEach(function(id){$(id).onclick=importMusic});
+$('quickFav').onclick=function(){go('library');setTimeout(function(){$('favoriteSongs').scrollIntoView({behavior:'smooth'})},80)};
+$('files').onchange=async function(e){let fs=Array.from(e.target.files||[]);if(!fs.length)return;for(let f of fs){let name=f.name.replace(/\.[^.]+$/,'');let t={id:String(Date.now())+Math.random(),title:name,artist:'本地音乐',file:f,url:URL.createObjectURL(f),favorite:false,color:palettes[songs.length%palettes.length],added:Date.now()};songs.push(t);save(t)}say('已导入 '+fs.length+' 首歌曲');renderAll();e.target.value=''};
+function row(t){return '<div class="row"><div class="art" style="background:'+t.color+'">♫</div><div class="info" data-play="'+t.id+'"><strong>'+safe(t.title)+'</strong><small>'+safe(t.artist)+' · 本地音乐</small></div><div class="actions"><button data-like="'+t.id+'">'+(t.favorite?'♥':'♡')+'</button><button data-play="'+t.id+'">▶</button></div></div>'}
+function fill(el,arr){el.innerHTML=arr.map(row).join('');el.querySelectorAll('[data-play]').forEach(function(b){b.onclick=function(){let i=songs.findIndex(function(t){return t.id===b.dataset.play});playAt(i)}});el.querySelectorAll('[data-like]').forEach(function(b){b.onclick=function(){let t=songs.find(function(x){return x.id===b.dataset.like});t.favorite=!t.favorite;save(t);renderAll()}})}
+function renderHome(){let a=songs.slice(-4).reverse();$('homeSongs').innerHTML=a.length?'':'<small style="color:var(--muted)">导入音乐后，最近添加的歌曲会显示在这里。</small>';if(a.length)fill($('homeSongs'),a);$('homeCount').textContent=songs.length+' 首'}
+function renderSearch(){let q=$('query').value.trim().toLowerCase(),a=songs.filter(function(t){return(t.title+' '+t.artist).toLowerCase().includes(q)});$('searchTitle').textContent=q?'搜索结果':'全部歌曲';$('searchCount').textContent=a.length+' 首';$('searchEmpty').style.display=a.length?'none':'block';if(a.length)fill($('searchSongs'),a);else $('searchSongs').innerHTML=''}
+function renderLibrary(){let fav=songs.filter(function(t){return t.favorite});$('libraryStat').textContent=songs.length+' 首歌曲 · '+fav.length+' 首收藏';$('libraryCount').textContent=songs.length+' 首';$('libraryEmpty').style.display=songs.length?'none':'block';if(songs.length)fill($('librarySongs'),songs);else $('librarySongs').innerHTML='';if(fav.length)fill($('favoriteSongs'),fav);else $('favoriteSongs').innerHTML='<small style="color:var(--muted)">点击歌曲旁边的♡即可收藏。</small>'}
+function renderAll(){renderHome();renderSearch();renderLibrary();update()}
+function playAt(i){if(i<0||!songs[i])return;current=i;audio.src=songs[i].url;audio.play().then(function(){say('正在播放')}).catch(function(){say('该音频暂时无法播放')});$('player').classList.add('open');update()}
+function update(){let t=songs[current];if(!t){$('mini').classList.remove('show');$('trackTitle').textContent='还没有歌曲';$('trackArtist').textContent='导入音频文件后开始播放';$('queueCount').textContent=songs.length;return}$('mini').classList.add('show');$('miniTitle').textContent=t.title;$('miniArtist').textContent=t.artist;$('trackTitle').textContent=t.title;$('trackArtist').textContent=t.artist+' · 本地音乐';$('bigArt').style.background=t.color;$('bigArtText').textContent=t.title.slice(0,18);$('like').textContent=t.favorite?'♥ 已收藏':'♡ 收藏';$('queueCount').textContent=songs.length;playIcon(!audio.paused)}
+function playIcon(on){$('play').textContent=on?'Ⅱ':'▶';$('miniPlay').textContent=on?'Ⅱ':'▶'}
+function toggle(){if(current<0){if(songs.length)playAt(0);else say('请先导入音乐');return}if(audio.paused)audio.play().catch(function(){say('无法播放该音频')});else audio.pause();playIcon(!audio.paused)}
+function next(){if(!songs.length)return;let n=shuffle&&songs.length>1?Math.floor(Math.random()*songs.length):(current+1)%songs.length;if(n===current&&songs.length>1)n=(n+1)%songs.length;playAt(n)}
+function prev(){if(!songs.length)return;if(audio.currentTime>3){audio.currentTime=0;return}playAt((current-1+songs.length)%songs.length)}
+$('query').oninput=renderSearch;$('play').onclick=toggle;$('miniPlay').onclick=toggle;$('miniOpen').onclick=function(){$('player').classList.add('open')};$('closePlayer').onclick=function(){$('player').classList.remove('open')};$('next').onclick=next;$('prev').onclick=prev;
+$('shuffle').onclick=function(){shuffle=!shuffle;$('shuffle').style.color=shuffle?'#ff6877':'#eee';say(shuffle?'随机播放已开启':'随机播放已关闭')};
+$('repeat').onclick=function(){repeat=!repeat;$('repeat').style.color=repeat?'#ff6877':'#eee';say(repeat?'单曲循环已开启':'单曲循环已关闭')};
+$('like').onclick=function(){if(current<0)return;songs[current].favorite=!songs[current].favorite;save(songs[current]);renderAll()};
+$('queue').onclick=function(){go('library');$('player').classList.remove('open')};$('playerMore').onclick=function(){say('声屿 MUSIC · 本地播放器')};
+audio.onplay=function(){playIcon(true)};audio.onpause=function(){playIcon(false)};
+audio.ontimeupdate=function(){if(audio.duration){$('seek').value=audio.currentTime/audio.duration*100;$('elapsed').textContent=time(audio.currentTime);$('total').textContent=time(audio.duration)}};
+$('seek').oninput=function(){if(audio.duration)audio.currentTime=$('seek').value/100*audio.duration};
+audio.onended=function(){if(repeat){audio.currentTime=0;audio.play()}else next()};
+restore();
+})();
+</script>
+</body>
+</html>
