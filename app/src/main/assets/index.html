@@ -253,7 +253,7 @@ function playQueueIndex(i){
  if(!nativePlaybackActive&&currentTrack.source==='local'&&$native&&typeof $native.playLocal==='function'){
   nativePlaybackActive=$native.playLocal(String(currentTrack.id),currentTrack.title,currentTrack.artist)===true;
  }
- if(nativePlaybackActive){nativeStartAt=Date.now();say(currentTrack.source==='audius'?'正在播放完整歌曲':'正在播放本地音乐')}
+ if(nativePlaybackActive){nativeStartAt=Date.now();$native.setShuffleMode(shuffle);$native.setRepeatMode(repeat?1:0);say(currentTrack.source==='audius'?'正在播放完整歌曲':'正在播放本地音乐')}
  else{
   audio.src=currentTrack.source==='audius'?streamUrl(currentTrack,0):currentTrack.url;
   audio.play().then(function(){say(currentTrack.source==='audius'?'正在播放完整歌曲':'正在播放本地音乐')}).catch(function(){say('该音频暂时无法播放')});
@@ -402,8 +402,8 @@ $('query').oninput=function(){renderSearchLocal();clearTimeout(onlineTimer);onli
 $('sortMode').onchange=function(){let q=$('query').value.trim();if(q)searchOnline(q);else loadTrending(true)};
 $('refreshTrending').onclick=function(){if($('query').value.trim())searchOnline($('query').value.trim());else loadTrending(true)};
 $('play').onclick=toggle;$('miniPlay').onclick=toggle;$('miniOpen').onclick=function(){$('player').classList.add('open')};$('closePlayer').onclick=function(){$('player').classList.remove('open')};
-$('next').onclick=next;$('prev').onclick=prev;$('shuffle').onclick=function(){shuffle=!shuffle;$('shuffle').style.color=shuffle?'#ff6877':'#eee';say(shuffle?'随机播放已开启':'随机播放已关闭')};
-$('repeat').onclick=function(){repeat=!repeat;$('repeat').style.color=repeat?'#ff6877':'#eee';say(repeat?'单曲循环已开启':'单曲循环已关闭')};
+$('next').onclick=next;$('prev').onclick=prev;$('shuffle').onclick=function(){shuffle=!shuffle;$('shuffle').style.color=shuffle?'#ff6877':'#eee';if(isNativeActive())$native.setShuffleMode(shuffle);say(shuffle?'随机播放已开启':'随机播放已关闭')};
+$('repeat').onclick=function(){repeat=!repeat;$('repeat').style.color=repeat?'#ff6877':'#eee';if(isNativeActive())$native.setRepeatMode(repeat?1:0);say(repeat?'单曲循环已开启':'单曲循环已关闭')};
 $('like').onclick=toggleFavoriteCurrent;$('queue').onclick=showQueue;$('playerMore').onclick=function(){if(currentTrack&&currentTrack.source==='audius')window.open(currentTrack.permalink,'_blank');else say('声屿 MUSIC · V4.0')};
 $('lyricsToggle').onclick=function(){$('lyricsPanel').classList.toggle('open');if(!$('lyricsPanel').classList.contains('open'))$('lyricsToggle').textContent='歌词';else $('lyricsToggle').textContent='收起歌词'};
 $('lyricsClose').onclick=function(){$('lyricsPanel').classList.remove('open');$('lyricsToggle').textContent='歌词'};
