@@ -142,7 +142,7 @@ function artistOf(t){let u=t.user||{};return u.name||u.handle||t.artist_name||t.
 function normalizeTrack(t){
  const id=String(t.id||t.track_id||'');const handle=(t.user&&t.user.handle)||'';
  let permalink=t.permalink||'';if(permalink&&permalink.indexOf('http')!==0)permalink='https://audius.co'+(permalink.charAt(0)==='/'?'':'/')+permalink;if(!permalink&&handle)permalink='https://audius.co/'+handle;
- return {source:'audius',trackId:id,id:id,title:t.title||'未命名曲目',artist:artistOf(t),album:t.album_name||'',genre:t.genre||'',duration:Number(t.duration)||0,artwork:artworkOf(t),permalink:permalink||'https://audius.co',license:t.license||'',streamable:t.is_streamable!==false,streamGated:t.is_stream_gated===true,downloadable:t.is_downloadable===true,color:palettes[Math.abs(id.split('').reduce(function(a,c){return a+c.charCodeAt(0)},0))%palettes.length],favorite:onlineFavorites.some(function(f){return String(f.trackId)===id})};
+ return {source:'audius',trackId:id,id:id,title:t.title||'未命名曲目',artist:artistOf(t),album:t.album_name||'',genre:t.genre||'',duration:Number(t.duration)||0,artwork:artworkOf(t),permalink:permalink||'https://audius.co',license:t.license||'',streamable:t.is_streamable!==false,streamGated:t.is_stream_gated===true,downloadable:t.is_downloadable===true,origFilename:t.orig_filename||'',color:palettes[Math.abs(id.split('').reduce(function(a,c){return a+c.charCodeAt(0)},0))%palettes.length],favorite:onlineFavorites.some(function(f){return String(f.trackId)===id})};
 }
 async function audiusGet(path){
  let lastError=null;
@@ -244,11 +244,11 @@ function playQueueIndex(i){
  if(!queue.length)return;let n=(i+queue.length)%queue.length;current=n;currentTrack=queue[current];endedHandled=false;streamFallbackTried=false;nativePlaybackActive=false;
  audio.pause();audio.removeAttribute('src');audio.load();
  if($native&&typeof $native.playQueue==='function'){
-  const nativeQueue=queue.map(function(t){return t.source==='audius'?{source:'audius',url:streamUrl(t,0),title:t.title,artist:t.artist,artwork:t.artwork||''}:{source:'local',id:t.id,title:t.title,artist:t.artist,artwork:''}});
+  const nativeQueue=queue.map(function(t){return t.source==='audius'?{source:'audius',url:streamUrl(t,0),title:t.title,artist:t.artist,album:t.album||'',artwork:t.artwork||''}:{source:'local',id:t.id,title:t.title,artist:t.artist,artwork:''}});
   nativePlaybackActive=$native.playQueue(JSON.stringify(nativeQueue),n)===true;
  }
  if(!nativePlaybackActive&&currentTrack.source==='audius'&&$native&&typeof $native.play==='function'){
-  nativePlaybackActive=$native.play(streamUrl(currentTrack,0),currentTrack.title,currentTrack.artist,currentTrack.artwork||'')===true;
+  nativePlaybackActive=$native.play(streamUrl(currentTrack,0),currentTrack.title,currentTrack.artist,currentTrack.artwork||'',currentTrack.album||'')===true;
  }
  if(!nativePlaybackActive&&currentTrack.source==='local'&&$native&&typeof $native.playLocal==='function'){
   nativePlaybackActive=$native.playLocal(String(currentTrack.id),currentTrack.title,currentTrack.artist)===true;
@@ -337,7 +337,7 @@ function cycleSpeed(){const speeds=[0.75,1,1.25,1.5,2];let i=speeds.indexOf(curr
 function downloadCurrent(){
  if(!currentTrack||currentTrack.source!=='audius'||!currentTrack.downloadable){say('该曲目未开放下载');return}
  if(!$native||!$native.download){say('当前环境不支持离线下载');return}
- $native.download(downloadUrl(currentTrack),currentTrack.title+'.mp3');
+ $native.download(downloadUrl(currentTrack),currentTrack.origFilename||currentTrack.title+'.audio');
 }
 function parseLrc(raw){
  const out=[];if(!raw)return out;
