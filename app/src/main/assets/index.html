@@ -324,7 +324,7 @@ function showSleepTimer(){
  let body='<div class="timer-countdown" id="timerRemaining">'+(sleepAtEnd?'当前歌曲结束后停止':countdown?time(countdown):'未设置定时')+'</div>';
  body+='<div class="sheet-action" data-sleep="15">15 分钟后停止</div><div class="sheet-action" data-sleep="30">30 分钟后停止</div><div class="sheet-action" data-sleep="45">45 分钟后停止</div><div class="sheet-action" data-sleep="60">60 分钟后停止</div><div class="sheet-action" data-sleep="end">当前歌曲结束后停止</div><button class="sheet-action" id="cancelSleep">取消定时</button>';
  showSheet('睡眠定时',body);
- $('sheetBody').querySelectorAll('[data-sleep]').forEach(function(b){b.onclick=function(){let v=b.dataset.sleep;if(v==='end'){sleepAtEnd=true;sleepDeadline=0;if($native)$native.setSleepTimer(0);say('将在当前歌曲结束后停止')}else{sleepAtEnd=false;let m=Number(v);sleepDeadline=Date.now()+m*60000;if($native)$native.setSleepTimer(m);say('已设置 '+m+' 分钟后停止')}closeSheet()}});
+ $('sheetBody').querySelectorAll('[data-sleep]').forEach(function(b){b.onclick=function(){let v=b.dataset.sleep;if(v==='end'){sleepAtEnd=true;sleepDeadline=0;if($native&&$native.setSleepAfterCurrent)$native.setSleepAfterCurrent();say('将在当前歌曲结束后停止')}else{sleepAtEnd=false;let m=Number(v);sleepDeadline=Date.now()+m*60000;if($native)$native.setSleepTimer(m);say('已设置 '+m+' 分钟后停止')}closeSheet()}});
  $('cancelSleep').onclick=function(){sleepAtEnd=false;sleepDeadline=0;if($native)$native.setSleepTimer(0);say('已取消睡眠定时');closeSheet()};
 }
 function showEqualizer(){
