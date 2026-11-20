@@ -3,6 +3,11 @@ plugins {
     id 'org.jetbrains.kotlin.android'
 }
 
+dependencies {
+    implementation 'androidx.media3:media3-exoplayer:1.5.1'
+    implementation 'androidx.media3:media3-session:1.5.1'
+}
+
 android {
     namespace 'com.shengyu.music'
     compileSdk 35
@@ -11,8 +16,8 @@ android {
         applicationId 'com.shengyu.music'
         minSdk 23
         targetSdk 34
-        versionCode 3
-        versionName '3.0'
+        versionCode 4
+        versionName '4.0'
     }
 
     buildTypes {
