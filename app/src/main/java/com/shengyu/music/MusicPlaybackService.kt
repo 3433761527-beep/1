@@ -4,7 +4,7 @@ import android.content.Intent
 import android.media.audiofx.Equalizer
 import android.os.Handler
 import android.os.Looper
-import androidx.media3.common.AudioListener
+import androidx.media3.common.Player
 import androidx.media3.common.C
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
@@ -21,7 +21,8 @@ class MusicPlaybackService : MediaSessionService() {
     override fun onCreate() {
         super.onCreate()
         val player = ExoPlayer.Builder(this).build()
-        player.addAudioListener(object : AudioListener {
+        player.addListener(object : Player.Listener {
+            @UnstableApi
             override fun onAudioSessionIdChanged(audioSessionId: Int) {
                 equalizer?.release()
                 equalizer = if (audioSessionId != C.AUDIO_SESSION_ID_UNSET) {
