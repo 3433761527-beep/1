@@ -326,6 +326,16 @@ class MainActivity : Activity() {
         }
 
         @JavascriptInterface
+        fun setSleepAfterCurrent() {
+            val intent = Intent(this@MainActivity, MusicPlaybackService::class.java).apply {
+                action = MusicPlaybackService.ACTION_SLEEP_AFTER_CURRENT
+            }
+            runOnUiThread {
+                try { startService(intent) } catch (_: Exception) { }
+            }
+        }
+
+        @JavascriptInterface
         fun download(url: String, fileName: String): Boolean {
             val uri = Uri.parse(url)
             if (uri.scheme != "https" || uri.host !in setOf("api.audius.co", "discoveryprovider.audius.co")) {
