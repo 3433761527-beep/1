@@ -50,7 +50,8 @@ class MainActivity : Activity() {
         val url: String,
         val title: String,
         val artist: String,
-        val artwork: String
+        val artwork: String,
+        val album: String = ""
     )
 
     private data class PendingQueue(
@@ -194,6 +195,7 @@ class MainActivity : Activity() {
             .setTitle(request.title)
             .setArtist(request.artist)
             .apply {
+                if (request.album.isNotBlank()) setAlbumTitle(request.album)
                 if (request.artwork.startsWith("https://")) setArtworkUri(Uri.parse(request.artwork))
                 setMediaType(MediaMetadata.MEDIA_TYPE_MUSIC)
             }
@@ -209,12 +211,12 @@ class MainActivity : Activity() {
 
     inner class NativePlaybackBridge {
         @JavascriptInterface
-        fun play(url: String, title: String, artist: String, artwork: String): Boolean {
+        fun play(url: String, title: String, artist: String, artwork: String, album: String): Boolean {
             val uri = Uri.parse(url)
             if (uri.scheme != "https" || uri.host !in setOf("api.audius.co", "discoveryprovider.audius.co")) {
                 return false
             }
-            val request = PendingPlayback(url, title.take(180), artist.take(180), artwork.take(2048))
+            val request = PendingPlayback(url, title.take(180), artist.take(180), artwork.take(2048), album.take(180))
             runOnUiThread { startNativePlayback(request) }
             return true
         }
@@ -283,6 +285,8 @@ class MainActivity : Activity() {
                         .setTitle(item.optString("title", "未知歌曲"))
                         .setArtist(item.optString("artist", "未知歌手"))
                         .apply {
+                            val album = item.optString("album")
+                            if (album.isNotBlank()) setAlbumTitle(album)
                             val art = item.optString("artwork")
                             if (art.startsWith("https://")) setArtworkUri(Uri.parse(art))
                             setMediaType(MediaMetadata.MEDIA_TYPE_MUSIC)
@@ -333,7 +337,7 @@ class MainActivity : Activity() {
                     val request = DownloadManager.Request(uri)
                         .setTitle(safeName)
                         .setDescription("声屿 MUSIC 离线音乐")
-                        .setMimeType("audio/mpeg")
+                        .setMimeType("audio/*")
                         .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
                         .setAllowedOverMetered(true)
                         .setAllowedOverRoaming(false)
