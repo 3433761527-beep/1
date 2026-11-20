@@ -34,8 +34,15 @@ class MainActivity : Activity() {
 
         webView.webViewClient = object : WebViewClient() {
             override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
-                val scheme = request?.url?.scheme ?: return false
-                return scheme != "file" && scheme != "about"
+                val uri = request?.url ?: return false
+                val scheme = uri.scheme ?: return false
+                if (scheme == "file" || scheme == "about") return false
+                return try {
+                    startActivity(Intent(Intent.ACTION_VIEW, uri))
+                    true
+                } catch (_: Exception) {
+                    false
+                }
             }
         }
 
