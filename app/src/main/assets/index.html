@@ -67,7 +67,7 @@ input[type=range]{width:100%;accent-color:var(--red);height:4px}.times{display:f
 <div class="online-toolbar"><span>曲库地区</span><select id="country"><option value="cn">中国大陆</option><option value="jp">日本</option><option value="us">美国</option></select></div>
 <div class="section"><h2>在线曲库</h2><small id="onlineStatus">输入关键词开始搜索</small></div>
 <div id="onlineSongs"></div>
-<div class="online-note">在线曲目由 Apple iTunes Search 提供。应用内仅提供约 30 秒试听；试听由 iTunes 提供。点击播放器中的 iTunes Store 标识可查看对应正版内容。</div>
+<div class="online-note">在线曲目由 Apple iTunes Search 提供。应用内仅提供约 30 秒试听；试听由 iTunes 提供。点击播放器中的 iTunes Store 标识可查看对应正版内容。Apple、Apple 标志及 iTunes Store 是 Apple Inc. 在美国及其他国家或地区的商标或服务标记。</div>
 <div class="section"><h2>本地音乐</h2><small id="searchCount">0 首</small></div><div id="searchSongs"></div>
 <div class="empty" id="searchEmpty"><div class="symbol">♫</div><strong>还没有本地歌曲</strong><p>你也可以导入手机中的音乐文件，在这里与在线试听内容一起管理。</p><button class="primary" id="searchImport">导入本地音乐</button></div>
 </section>
@@ -127,10 +127,10 @@ function renderOnline(){
 }
 function searchOnline(term){
  const q=term.trim();
+ const req=++onlineRequest;
  if(!q){onlineResults=[];$('onlineStatus').textContent='输入歌曲名或歌手名开始搜索';renderOnline();return}
  const country=$('country').value||'cn',key=country+':'+q.toLowerCase();
  if(onlineCache[key]){onlineResults=onlineCache[key];$('onlineStatus').textContent='找到 '+onlineResults.length+' 首可试听歌曲';renderOnline();return}
- const req=++onlineRequest;
  $('onlineStatus').textContent='正在搜索在线曲库…';
  const callback='shengyu_itunes_'+Date.now()+'_'+Math.floor(Math.random()*100000);
  const script=document.createElement('script');
@@ -162,8 +162,8 @@ function toggleFavoriteCurrent(){
 }
 function onlineFavoriteRows(){
  const root=$('favoriteSongs');
- if(!onlineFavorites.length){root.innerHTML='<small style="color:var(--muted)">点击在线歌曲播放器中的收藏按钮，可保存在线试听曲目。</small>';return}
- root.innerHTML=onlineFavorites.map(function(t,i){return '<div class="row"><div class="art online-cover">♫</div><div class="info"><strong>'+safe(t.title)+'</strong><small>'+safe(t.artist)+' · 在线试听</small></div><div class="actions"><button data-online-fav-play="'+i+'">▶</button></div></div>'}).join('');
+ if(!onlineFavorites.length){if(!songs.some(function(t){return t.favorite}))root.innerHTML='<small style="color:var(--muted)">点击歌曲旁边的♡即可收藏。</small>';return}
+ root.insertAdjacentHTML('beforeend',onlineFavorites.map(function(t,i){return '<div class="row"><div class="art online-cover">♫</div><div class="info"><strong>'+safe(t.title)+'</strong><small>'+safe(t.artist)+' · 在线试听</small></div><div class="actions"><button data-online-fav-play="'+i+'">▶</button></div></div>'}).join(''));
  root.querySelectorAll('[data-online-fav-play]').forEach(function(b){b.onclick=function(){playOnlineAt(Number(b.dataset.onlineFavPlay),onlineFavorites)}});
 }
 function renderLibrary(){let fav=songs.filter(function(t){return t.favorite});$('libraryStat').textContent=songs.length+' 首本地歌曲 · '+(fav.length+onlineFavorites.length)+' 首收藏';$('libraryCount').textContent=songs.length+' 首';$('libraryEmpty').style.display=songs.length?'none':'block';if(songs.length)fill($('librarySongs'),songs);else $('librarySongs').innerHTML='';let root=$('favoriteSongs');let localHtml=fav.map(row).join('');root.innerHTML=localHtml;if(fav.length)fill(root,fav);onlineFavoriteRows()}
@@ -174,7 +174,7 @@ function playIcon(on){$('play').textContent=on?'Ⅱ':'▶';$('miniPlay').textCon
 function toggle(){if(!currentTrack){if(songs.length)playAt(0);else say('请先搜索在线歌曲或导入本地音乐');return}if(audio.paused)audio.play().catch(function(){say('无法播放该音频')});else audio.pause();playIcon(!audio.paused)}
 function next(){if(!queue.length)return;let n=shuffle&&queue.length>1?Math.floor(Math.random()*queue.length):(current+1)%queue.length;if(n===current&&queue.length>1)n=(n+1)%queue.length;if(queue[n].source==='online')playOnlineAt(n,queue);else{current=n;currentTrack=queue[current];audio.src=currentTrack.url;audio.play().catch(function(){say('无法播放该音频')});update()}}
 function prev(){if(!queue.length)return;if(audio.currentTime>3){audio.currentTime=0;return}let n=(current-1+queue.length)%queue.length;if(queue[n].source==='online')playOnlineAt(n,queue);else{current=n;currentTrack=queue[current];audio.src=currentTrack.url;audio.play().catch(function(){say('无法播放该音频')});update()}}
-$('query').oninput=function(){renderSearch();clearTimeout(onlineTimer);let q=$('query').value.trim();onlineTimer=setTimeout(function(){if(q.length>=1)searchOnline(q);else{onlineResults=[];$('onlineStatus').textContent='输入歌曲名或歌手名开始搜索';renderOnline()}},650)};$('country').onchange=function(){let q=$('query').value.trim();if(q)searchOnline(q)};$('play').onclick=toggle;$('miniPlay').onclick=toggle;$('miniOpen').onclick=function(){$('player').classList.add('open')};$('closePlayer').onclick=function(){$('player').classList.remove('open')};$('next').onclick=next;$('prev').onclick=prev;
+$('query').oninput=function(){renderSearch();clearTimeout(onlineTimer);onlineRequest++;let q=$('query').value.trim();if(!q){onlineResults=[];$('onlineStatus').textContent='输入歌曲名或歌手名开始搜索';renderOnline();return}onlineTimer=setTimeout(function(){searchOnline(q)},650)};$('country').onchange=function(){let q=$('query').value.trim();if(q)searchOnline(q)};$('play').onclick=toggle;$('miniPlay').onclick=toggle;$('miniOpen').onclick=function(){$('player').classList.add('open')};$('closePlayer').onclick=function(){$('player').classList.remove('open')};$('next').onclick=next;$('prev').onclick=prev;
 $('shuffle').onclick=function(){shuffle=!shuffle;$('shuffle').style.color=shuffle?'#ff6877':'#eee';say(shuffle?'随机播放已开启':'随机播放已关闭')};
 $('repeat').onclick=function(){repeat=!repeat;$('repeat').style.color=repeat?'#ff6877':'#eee';say(repeat?'单曲循环已开启':'单曲循环已关闭')};
 $('like').onclick=toggleFavoriteCurrent;
