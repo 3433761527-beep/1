@@ -32,6 +32,21 @@ jobs:
           yes | sdkmanager --licenses >/dev/null || true
           sdkmanager "platforms;android-35" "build-tools;35.0.0"
 
+      - name: Smoke-test Audius full-track streaming API
+        continue-on-error: true
+        run: |
+          set -e
+          curl --retry 2 --retry-delay 2 -fsS "https://api.audius.co/v1/tracks/search?query=lofi&limit=10&app_name=shengyu_music" -o /tmp/audius-search.json
+          TRACK_ID=$(jq -r '[.data[] | select(.is_streamable == true and .is_stream_gated != true and .is_unlisted != true) | .id][0] // empty' /tmp/audius-search.json)
+          if [ -z "$TRACK_ID" ]; then
+            echo "Audius search responded, but no public streamable sample track was returned."
+            exit 0
+          fi
+          curl --retry 2 --retry-delay 2 -fLsS --max-time 45 "https://api.audius.co/v1/tracks/$TRACK_ID/stream?app_name=shengyu_music" -o /tmp/audius-stream-test.bin
+          test -s /tmp/audius-stream-test.bin
+          file /tmp/audius-stream-test.bin
+          echo "Audius full-track stream endpoint returned a non-empty audio payload."
+
       - name: Set up Gradle 8.13
         uses: gradle/actions/setup-gradle@v4
         with:
