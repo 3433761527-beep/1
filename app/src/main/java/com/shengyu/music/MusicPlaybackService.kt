@@ -18,6 +18,7 @@ class MusicPlaybackService : MediaSessionService() {
     private var equalizer: Equalizer? = null
     private val timerHandler = Handler(Looper.getMainLooper())
     private var sleepTimerTask: Runnable? = null
+    private var sleepAfterCurrent = false
 
     override fun onCreate() {
         super.onCreate()
@@ -44,6 +45,20 @@ class MusicPlaybackService : MediaSessionService() {
                     }
                 } else null
             }
+
+            override fun onMediaItemTransition(mediaItem: androidx.media3.common.MediaItem?, reason: Int) {
+                if (sleepAfterCurrent) {
+                    sleepAfterCurrent = false
+                    mediaSession?.player?.pause()
+                }
+            }
+
+            override fun onPlaybackStateChanged(playbackState: Int) {
+                if (sleepAfterCurrent && playbackState == Player.STATE_ENDED) {
+                    sleepAfterCurrent = false
+                    mediaSession?.player?.pause()
+                }
+            }
         })
         mediaSession = MediaSession.Builder(this, player).build()
     }
@@ -58,11 +73,18 @@ class MusicPlaybackService : MediaSessionService() {
             }
             ACTION_SET_SLEEP_TIMER -> {
                 val minutes = intent.getIntExtra(EXTRA_SLEEP_MINUTES, 0)
+                sleepAfterCurrent = false
                 scheduleSleepTimer(minutes)
+                return START_NOT_STICKY
+            }
+            ACTION_SLEEP_AFTER_CURRENT -> {
+                scheduleSleepTimer(0)
+                sleepAfterCurrent = true
                 return START_NOT_STICKY
             }
             ACTION_CANCEL_SLEEP_TIMER -> {
                 scheduleSleepTimer(0)
+                sleepAfterCurrent = false
                 return START_NOT_STICKY
             }
         }
@@ -125,6 +147,7 @@ class MusicPlaybackService : MediaSessionService() {
         const val EXTRA_EQ_PRESET = "preset"
         const val ACTION_SET_SLEEP_TIMER = "com.shengyu.music.action.SET_SLEEP_TIMER"
         const val ACTION_CANCEL_SLEEP_TIMER = "com.shengyu.music.action.CANCEL_SLEEP_TIMER"
+        const val ACTION_SLEEP_AFTER_CURRENT = "com.shengyu.music.action.SLEEP_AFTER_CURRENT"
         const val EXTRA_SLEEP_MINUTES = "minutes"
     }
 }
