@@ -2,6 +2,8 @@ package com.shengyu.music
 
 import android.content.Intent
 import android.media.audiofx.Equalizer
+import android.os.Handler
+import android.os.Looper
 import androidx.media3.common.AudioListener
 import androidx.media3.common.C
 import androidx.media3.common.util.UnstableApi
@@ -13,6 +15,8 @@ import androidx.media3.session.MediaSessionService
 class MusicPlaybackService : MediaSessionService() {
     private var mediaSession: MediaSession? = null
     private var equalizer: Equalizer? = null
+    private val timerHandler = Handler(Looper.getMainLooper())
+    private var sleepTimerTask: Runnable? = null
 
     override fun onCreate() {
         super.onCreate()
@@ -35,11 +39,34 @@ class MusicPlaybackService : MediaSessionService() {
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? = mediaSession
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        if (intent?.action == ACTION_SET_EQ) {
-            applyEqualizerPreset(intent.getIntExtra(EXTRA_EQ_PRESET, 0))
-            return START_NOT_STICKY
+        when (intent?.action) {
+            ACTION_SET_EQ -> {
+                applyEqualizerPreset(intent.getIntExtra(EXTRA_EQ_PRESET, 0))
+                return START_NOT_STICKY
+            }
+            ACTION_SET_SLEEP_TIMER -> {
+                val minutes = intent.getIntExtra(EXTRA_SLEEP_MINUTES, 0)
+                scheduleSleepTimer(minutes)
+                return START_NOT_STICKY
+            }
+            ACTION_CANCEL_SLEEP_TIMER -> {
+                scheduleSleepTimer(0)
+                return START_NOT_STICKY
+            }
         }
         return super.onStartCommand(intent, flags, startId)
+    }
+
+    private fun scheduleSleepTimer(minutes: Int) {
+        sleepTimerTask?.let { timerHandler.removeCallbacks(it) }
+        sleepTimerTask = null
+        if (minutes <= 0) return
+        val task = Runnable {
+            mediaSession?.player?.pause()
+            sleepTimerTask = null
+        }
+        sleepTimerTask = task
+        timerHandler.postDelayed(task, minutes.coerceIn(1, 240) * 60_000L)
     }
 
     private fun applyEqualizerPreset(preset: Int) {
@@ -69,6 +96,8 @@ class MusicPlaybackService : MediaSessionService() {
     }
 
     override fun onDestroy() {
+        sleepTimerTask?.let { timerHandler.removeCallbacks(it) }
+        sleepTimerTask = null
         equalizer?.release()
         equalizer = null
         mediaSession?.run {
@@ -82,5 +111,8 @@ class MusicPlaybackService : MediaSessionService() {
     companion object {
         const val ACTION_SET_EQ = "com.shengyu.music.action.SET_EQ"
         const val EXTRA_EQ_PRESET = "preset"
+        const val ACTION_SET_SLEEP_TIMER = "com.shengyu.music.action.SET_SLEEP_TIMER"
+        const val ACTION_CANCEL_SLEEP_TIMER = "com.shengyu.music.action.CANCEL_SLEEP_TIMER"
+        const val EXTRA_SLEEP_MINUTES = "minutes"
     }
 }
